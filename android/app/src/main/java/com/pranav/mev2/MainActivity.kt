@@ -1,19 +1,36 @@
 package com.pranav.mev2
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 
-class MainActivity : AppCompatActivity() {
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import com.pranav.mev2.data.api.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+        setContent {
+
+            var message by remember { mutableStateOf("Loading...") }
+
+            LaunchedEffect(Unit) {
+                try {
+                    val response = withContext(Dispatchers.IO) {
+                        RetrofitClient.api.health().execute()
+                    }
+
+                    message = response.body() ?: "Error"
+
+                } catch (e: Exception) {
+                    message = e.message ?: "Connection failed"                }
+            }
+
+            Text(text = message)
         }
     }
 }
